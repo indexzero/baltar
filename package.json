@@ -1,0 +1,27 @@
+{
+  "name": "baltar",
+  "version": "0.0.0",
+  "description": "A few small utilities for working with tarballs and http.",
+  "main": "index.js",
+  "scripts": {
+    "test": "istanbul ./node_modules/.bin/_mocha test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/indexzero/baltar.git"
+  },
+  "keywords": [
+    "tar",
+    "http",
+    "tarball",
+    "untar",
+    "tgz",
+    "gzip"
+  ],
+  "author": "Charlie Robbins <charlie.robbins@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/indexzero/baltar/issues"
+  },
+  "homepage": "https://github.com/indexzero/baltar#readme"
+}
