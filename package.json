@@ -23,5 +23,11 @@
   "bugs": {
     "url": "https://github.com/indexzero/baltar/issues"
   },
-  "homepage": "https://github.com/indexzero/baltar#readme"
+  "homepage": "https://github.com/indexzero/baltar#readme",
+  "dependencies": {
+    "diagnostics": "^1.0.1",
+    "hyperquest": "^1.2.0",
+    "once": "^1.3.2",
+    "tar": "^2.2.1"
+  }
 }

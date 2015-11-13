@@ -3,5 +3,5 @@ A few small utilities for working with tarballs and http. Because you need tarba
 
 ![](https://media.giphy.com/media/52HjuHsfVO69q/giphy.gif)
 
-##### LICENSE MIT
+##### LICENSE: MIT
 ##### AUTHOR: [Charlie Robbins](http://github.com/indexzero)
