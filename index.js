@@ -14,14 +14,15 @@ var debug = diagnostics('baltar');
  * Makes a request to `opts.url` and unpacks it to
  * `opts.path`.
  *
- * @param {Object} opts. Options for packing tarballs
- *   - opts.path: Directory or file to pack
- *   - opts.ignoreFiles: Extra ignore files to parse
+ * @param {Object} opts. Options for downloading & unpacking tarball.
+ *   - opts.url {string} Location of the receiver.
+ *   - opts.headers {Object} HTTP headers to send.
+ *   - opts.method {string} HTTP Method to send.
+ *   - opts.path: Directory or file to unpack to.
  */
 exports.pull = function (opts, callback) {
   var entries = [],
-      url = opts.url,
-      target = opts.target,
+      method = opts.method || 'GET',
       done;
 
   done = once(function (err) {
@@ -29,20 +30,41 @@ exports.pull = function (opts, callback) {
     callback(null, entries);
   });
 
-  debug('Download %s', url);
-  debug('Extract to %s', target);
+  debug('Download %s %s', method, opts.url);
+  debug('Extract to %s', opts.path);
 
-  hyperquest(url)
-    .on('error', done)
-    .pipe(zlib.Unzip())
-    .on('error', done)
-    .pipe(tar.Extract({ path: target }))
-    .on('entry', function (e) {
-      debug('untar', e.path);
-      entries.push(e);
-    })
-    .on('error', done)
-    .on('finish', done);
+  hyperquest(opts.url, {
+    method: method,
+    headers: opts.headers || {}
+  })
+  .on('error', done)
+  .pipe(exports.unpack(opts.path))
+  .on('entry', function (e) {
+    debug('untar', e.path);
+    entries.push(e);
+  })
+  .on('error', done)
+  .on('finish', done);
+};
+
+/**
+ * Returns a stream which will unpack and stream into
+ * the specified `opts.path`
+ *
+ * @param {Object|string} opts. Options for unpacking tarball.
+ *   - opts.path: Directory or file to unpack to
+ *
+ * @returns {Stream} Gunzip and untar pipechain to `opts.path`.
+ */
+exports.unpack = function (opts, callback) {
+  if (typeof opts === 'string') {
+    opts = { path: opts };
+  }
+
+  var extract = tar.Extract(opts);
+  return zlib.Gunzip()
+    .on('error', extract.emit.bind(extract, 'error'))
+    .pipe(extract);
 };
 
 /**
@@ -94,8 +116,8 @@ exports.pack = function (opts) {
  *   - opts.path: Directory or file to pack
  *   - opts.ignoreFiles: Extra ignore files to parse
  *   - opts.url {string} Location of the receiver.
- *   - opts.settings {Object} Instructions on running tests.
- *   - opts.method {string} HTTP Method to send to receiver.
+ *   - opts.headers {Object} HTTP headers to send.
+ *   - opts.method {string} HTTP Method to send.
  *
  * @returns {Stream} HTTP request stream to `opts.url`.
  */
