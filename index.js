@@ -46,7 +46,8 @@ exports.pull = function (opts, callback) {
   }).on('error', done);
 
   if (opts.tarball) {
-    request.pipe(fs.createWriteStream(opts.tarball));
+    request.pipe(fs.createWriteStream(opts.tarball))
+      .on('error', done);
   }
 
   return request
