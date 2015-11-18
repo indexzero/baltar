@@ -18,11 +18,16 @@ var debug = diagnostics('baltar');
  *   - opts.url {string} Location of the receiver.
  *   - opts.headers {Object} HTTP headers to send.
  *   - opts.method {string} HTTP Method to send.
- *   - opts.path: Directory or file to unpack to.
+ *   - opts.path: {string} Directory or file to unpack to.
+ *   - opts.tarball: {string} **Optional** Path to save tarball to.
  */
 exports.pull = function (opts, callback) {
-  var entries = [],
-      method = opts.method || 'GET',
+  if (!opts || !opts.path || !opts.url) {
+    return callback(new Error('opts = { path, url } is required.'));
+  }
+
+  var method = opts.method || 'GET',
+      entries = [],
       done;
 
   done = once(function (err) {
@@ -33,18 +38,25 @@ exports.pull = function (opts, callback) {
   debug('Download %s %s', method, opts.url);
   debug('Extract to %s', opts.path);
 
-  hyperquest(opts.url, {
+  var request = hyperquest(opts.url, {
     method: method,
     headers: opts.headers || {}
-  })
-  .on('error', done)
-  .pipe(exports.unpack(opts.path))
-  .on('entry', function (e) {
-    debug('untar', e.path);
-    entries.push(e);
-  })
-  .on('error', done)
-  .on('finish', done);
+  }).on('error', done);
+
+  if (opts.tarball) {
+    request.pipe(fs.createWriteStream(opts.tarball));
+  }
+
+  request
+    .pipe(zlib.Gunzip())
+    .on('error', done)
+    .pipe(tar.Extract({ path: opts.path }))
+    .on('error', done)
+    .on('entry', function (e) {
+      debug('untar', e.path);
+      entries.push(e);
+    })
+    .on('finish', done);
 };
 
 /**

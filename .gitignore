@@ -25,3 +25,11 @@ build/Release
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
+
+# Ignore test fixtures
+# but keep the directory
+test/fixtures/
+!test/fixtures/index.js
+
+# All Apple files
+.DS_Store
