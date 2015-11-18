@@ -5,7 +5,7 @@ A few small utilities for working with tarballs and http. Because you need tarba
 
 ## Usage
 
-### 1. `push` and `pull` tarballs over the network
+### Fetch & send tarballs over the network
 
 ##### `baltar.pull(opts, callback)`
 
@@ -27,7 +27,7 @@ Makes a request to `opts.url` and unpacks it to `opts.path`. `baltar.pull` is th
 - `opts.method`: {string} HTTP Method to send.
 - `returns`: {Stream} HTTP request stream to `opts.url`.
 
-### 2. `pack` and `unpack` tarballs locally
+### Pack and unpack tarballs locally
 
 ##### `baltar.unpack(opts)`
 
