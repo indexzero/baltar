@@ -22,7 +22,7 @@ Makes a request to `opts.url` and unpacks it to `opts.path`. `baltar.pull` is th
 baltar.pull({
   url: 'https://example.com/path/to/any/file.tgz',
   path: 'location/to/untar/into',
-}, funciton (err, entries) {
+}, function (err, entries) {
   //
   // Unpacked tarball now exists in
   // 'location/to/untar/into'. All
