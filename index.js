@@ -103,7 +103,7 @@ exports.unpack = function (opts) {
  * Returns a stream representing the tar.gz packed
  * version of `opts.dir`.
  *
- * @param {Object} opts. Options for packing tarballs
+ * @param {string|Object} opts. Options for packing tarballs
  *   - opts.path: Directory or file to pack
  *   - opts.ignoreFiles: Extra ignore files to parse
  *
@@ -113,6 +113,14 @@ exports.unpack = function (opts) {
  * @returns {Stream} Tar'ed and gzip'ed `opts.path`.
  */
 exports.pack = function (opts) {
+  if (typeof opts === 'string') {
+    opts = { path: opts };
+  }
+  else if (!opts || !opts.path) {
+    throw new Error('opts = string, { path } is required.');
+  }
+
+
   var gzip = zlib.Gzip(),
       ignore;
 
