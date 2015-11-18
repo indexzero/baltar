@@ -4,7 +4,8 @@
   "description": "A few small utilities for working with tarballs and http.",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul ./node_modules/.bin/_mocha test/*.test.js"
+    "pretest": "common index.js",
+    "test": "istanbul cover ./node_modules/.bin/_mocha test/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -23,5 +24,22 @@
   "bugs": {
     "url": "https://github.com/indexzero/baltar/issues"
   },
-  "homepage": "https://github.com/indexzero/baltar#readme"
+  "homepage": "https://github.com/indexzero/baltar#readme",
+  "dependencies": {
+    "diagnostics": "^1.0.1",
+    "fstream-ignore": "^1.0.3",
+    "hyperquest": "^1.2.0",
+    "once": "^1.3.2",
+    "tar": "^2.2.1"
+  },
+  "devDependencies": {
+    "assume": "^1.3.1",
+    "async": "^1.5.0",
+    "common-style": "^3.1.0",
+    "istanbul": "^0.4.0",
+    "mocha": "^2.3.4",
+    "mocha-istanbul": "^0.2.0",
+    "retry": "^0.8.0",
+    "rimraf": "^2.4.3"
+  }
 }
