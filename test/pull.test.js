@@ -4,49 +4,14 @@ var fs = require('fs'),
     path = require('path'),
     assume = require('assume'),
     async = require('async'),
-    rimraf = require('rimraf'),
-    retry = require('retry'),
     fixtures = require('./fixtures'),
+    helpers = require('./helpers'),
     baltar = require('../');
 
-/*
- * Helper function to assume an error with
- * the given arguments.
- */
-function assumeError(opts) {
-  return function () {
-    baltar.pull(opts, function (err) {
-      assume(err).is.an('error');
-      assume(err.message).is.a('string');
-      assume(err.message).contains('is required.');
-    });
-  };
-}
+var rmFixture = helpers.rmFixture,
+    assumeError = helpers.assumeError;
 
-/*
- * Attempts to remove a test fixture directory
- * logging (and ignoring) any errors.
- */
-function rmFixture(dir, done) {
-  var force = retry.operation({
-    retries: 2,
-    minTimeout: 10
-  });
-
-  force.attempt(function () {
-    rimraf(path.join(fixtures.root, dir), function (err) {
-      if (force.retry(err)) {
-        return;
-      } else if (err) {
-        console.warn("Can't remove artifact: %s", err.message);
-      }
-
-      done();
-    });
-  });
-}
-
-describe('pull', function () {
+describe('baltar.pull', function () {
   it('pull(null, function)', assumeError(null));
   it('pull({}, function)', assumeError({}));
   it('pull({path}, function)', assumeError({ path: './fixtures' }));

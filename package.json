@@ -4,6 +4,7 @@
   "description": "A few small utilities for working with tarballs and http.",
   "main": "index.js",
   "scripts": {
+    "pretest": "common index.js",
     "test": "istanbul cover ./node_modules/.bin/_mocha test/*.test.js"
   },
   "repository": {
@@ -26,6 +27,7 @@
   "homepage": "https://github.com/indexzero/baltar#readme",
   "dependencies": {
     "diagnostics": "^1.0.1",
+    "fstream-ignore": "^1.0.3",
     "hyperquest": "^1.2.0",
     "once": "^1.3.2",
     "tar": "^2.2.1"

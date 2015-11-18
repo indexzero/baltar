@@ -5,6 +5,7 @@ var fs = require('fs'),
     path = require('path'),
     diagnostics = require('diagnostics'),
     hyperquest = require('hyperquest'),
+    Ignore = require('fstream-ignore'),
     once = require('once'),
     tar = require('tar');
 
@@ -68,15 +69,33 @@ exports.pull = function (opts, callback) {
  *
  * @returns {Stream} Gunzip and untar pipechain to `opts.path`.
  */
-exports.unpack = function (opts, callback) {
+exports.unpack = function (opts) {
   if (typeof opts === 'string') {
     opts = { path: opts };
   }
+  else if (!opts || !opts.path) {
+    throw new Error('opts = string, { path } is required.');
+  }
 
-  var extract = tar.Extract(opts);
-  return zlib.Gunzip()
-    .on('error', extract.emit.bind(extract, 'error'))
-    .pipe(extract);
+  var extract = tar.Extract(opts),
+      gunzip = zlib.Gunzip();
+
+  //
+  // Remark: purposefully suppressing the other events
+  // that are emitted by tar for ease-of-use. Would be
+  // re-added if there is a significant enough reason.
+  //
+  gunzip
+    .pipe(extract)
+    .on('error', gunzip.emit.bind(gunzip, 'error'))
+    .on('entry', gunzip.emit.bind(gunzip, 'entry'))
+    //
+    // TODO: There has to be a way to do this with a
+    // through stream, but I can't think of it right now.
+    //
+    .on('finish', gunzip.emit.bind(gunzip, 'done'));
+
+  return gunzip;
 };
 
 /**
@@ -109,11 +128,11 @@ exports.pack = function (opts) {
       //
       debug('%s: %s', msg, err);
       gzip.emit('error', err);
-    }
+    };
   }
 
   return ignore
-    .on('error', logErr('error reading ' + options.path))
+    .on('error', logErr('error reading ' + opts.path))
     .pipe(tar.Pack({ noProprietary: true }))
     .on('error', logErr('tar creation error'))
     .pipe(gzip);
