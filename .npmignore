@@ -28,7 +28,7 @@ node_modules
 
 # Ignore test fixtures
 # but keep the directory
-test/fixtures/
+test/fixtures/*
 !test/fixtures/index.js
 
 # All Apple files
