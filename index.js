@@ -16,11 +16,12 @@ var debug = diagnostics('baltar');
  * `opts.path`.
  *
  * @param {Object} opts. Options for downloading & unpacking tarball.
- *   - opts.url {string} Location of the receiver.
- *   - opts.headers {Object} HTTP headers to send.
- *   - opts.method {string} HTTP Method to send.
+ *   - opts.url: {string} Location of the receiver.
+ *   - opts.headers: {Object} HTTP headers to send.
+ *   - opts.method: {string} HTTP Method to send.
  *   - opts.path: {string} Directory or file to unpack to.
  *   - opts.tarball: {string} **Optional** Path to save tarball to.
+ * @returns {tar.Extract} Extraction stream for the pulled tarball.
  */
 exports.pull = function (opts, callback) {
   if (!opts || !opts.path || !opts.url) {
@@ -48,7 +49,7 @@ exports.pull = function (opts, callback) {
     request.pipe(fs.createWriteStream(opts.tarball));
   }
 
-  request
+  return request
     .pipe(zlib.Gunzip())
     .on('error', done)
     .pipe(tar.Extract({ path: opts.path }))
