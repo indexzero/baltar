@@ -120,7 +120,6 @@ exports.pack = function (opts) {
     throw new Error('opts = string, { path } is required.');
   }
 
-
   var gzip = zlib.Gzip(),
       ignore;
 
