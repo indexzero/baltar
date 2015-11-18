@@ -1,6 +1,6 @@
 {
   "name": "baltar",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A few small utilities for working with tarballs and http.",
   "main": "index.js",
   "scripts": {
