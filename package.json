@@ -9,6 +9,9 @@
   },
   "main": "./index.js",
   "types": "./index.d.ts",
+  "bin": {
+    "baltar": "./bin/cli.js"
+  },
   "engines": {
     "node": ">=20.0.0"
   },
