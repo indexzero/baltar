@@ -1,11 +1,20 @@
 {
   "name": "baltar",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "A few small utilities for working with tarballs and http.",
-  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "pretest": "common index.js",
-    "test": "istanbul cover ./node_modules/.bin/_mocha test/*.test.js"
+    "test": "c8 mocha test/*.test.js",
+    "test:coverage": "c8 --reporter=html --reporter=text mocha test/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -17,7 +26,10 @@
     "tarball",
     "untar",
     "tgz",
-    "gzip"
+    "gzip",
+    "esm",
+    "undici",
+    "streams"
   ],
   "author": "Charlie Robbins <charlie.robbins@gmail.com>",
   "license": "MIT",
@@ -26,20 +38,17 @@
   },
   "homepage": "https://github.com/indexzero/baltar#readme",
   "dependencies": {
-    "diagnostics": "^1.0.1",
-    "fstream-ignore": "^1.0.3",
-    "hyperquest": "^1.2.0",
-    "once": "^1.3.2",
-    "tar": "^2.2.1"
+    "diagnostics": "^2.0.2",
+    "ignore": "^7.0.5",
+    "tar": "^7.5.1",
+    "undici": "^7.16.0"
   },
   "devDependencies": {
-    "assume": "^1.3.1",
-    "async": "^1.5.0",
-    "common-style": "^3.1.0",
-    "istanbul": "^0.4.0",
-    "mocha": "^2.3.4",
-    "mocha-istanbul": "^0.2.0",
-    "retry": "^0.8.0",
-    "rimraf": "^2.4.3"
+    "assume": "^2.3.0",
+    "async": "^3.2.6",
+    "c8": "^10.1.3",
+    "mocha": "^11.7.4",
+    "retry": "^0.13.1",
+    "rimraf": "^6.0.1"
   }
 }
