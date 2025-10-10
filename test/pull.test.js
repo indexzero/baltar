@@ -81,15 +81,8 @@ describe('baltar.pull', function () {
 
     // Calculate the correct hash
     const hash = crypto.createHash('sha512');
-    await pipeline(
-      createReadStream(tarball),
-      async function* (source) {
-        for await (const chunk of source) {
-          hash.update(chunk);
-          yield chunk;
-        }
-      }
-    );
+    const fileBuffer = await readFile(tarball);
+    hash.update(fileBuffer);
     const correctHash = hash.digest('base64');
 
     // Clean up for the next test
