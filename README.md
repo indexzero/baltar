@@ -16,7 +16,32 @@ npm install baltar
 
 Requires Node.js >= 20.0.0
 
-## Usage
+## CLI Usage
+
+```bash
+# Pull and extract a tarball
+baltar pull https://example.com/archive.tar.gz ./extracted
+
+# Pull npm package (requires --strip 1)
+baltar pull https://registry.npmjs.org/express/-/express-4.18.2.tgz ./express --strip 1
+
+# Push a directory as tarball
+baltar push ./myproject https://example.com/upload
+
+# Get help
+baltar --help
+```
+
+### CLI Options
+
+- `--strip <n>`: Strip n leading directory components (pull only, use 1 for npm tarballs)
+- `--tarball <path>`: Save tarball to path (pull only)
+- `--integrity <hash>`: Verify integrity (pull only)
+- `--method <method>`: HTTP method (default: GET for pull, POST for push)
+- `--header <header>`: Add HTTP header (can be repeated)
+- `--ignore <pattern>`: Add ignore pattern (push only, can be repeated)
+
+## API Usage
 
 ### Fetch & send tarballs over the network
 
@@ -30,6 +55,7 @@ Makes a request to `opts.url` and unpacks it to `opts.path`. Returns extracted e
 - `opts.path`: {string} Directory to unpack to
 - `opts.tarball`: {string} Optional path to save tarball to
 - `opts.integrity`: {string} Optional SRI hash for verification
+- `opts.strip`: {number} Optional number of leading directory components to strip (default: 0)
 
 ```js
 import { pull } from 'baltar';
