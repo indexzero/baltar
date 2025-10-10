@@ -1,7 +1,20 @@
 # baltar
+
+[![CI](https://github.com/indexzero/baltar/actions/workflows/ci.yaml/badge.svg)](https://github.com/indexzero/baltar/actions/workflows/ci.yaml)
+[![npm version](https://badge.fury.io/js/baltar.svg)](https://www.npmjs.com/package/baltar)
+[![node](https://img.shields.io/node/v/baltar.svg)](https://www.npmjs.com/package/baltar)
+
 A few small utilities for working with tarballs and http. Because you need tarballs over HTTP like:
 
 ![](https://i.giphy.com/media/52HjuHsfVO69q/giphy-downsized.gif)
+
+## Installation
+
+```bash
+npm install baltar
+```
+
+Requires Node.js >= 20.0.0
 
 ## Usage
 
@@ -9,100 +22,96 @@ A few small utilities for working with tarballs and http. Because you need tarba
 
 ##### `baltar.pull(opts, callback)`
 
-Makes a request to `opts.url` and unpacks it to `opts.path`. `baltar.pull` is the only method which accepts a callback so that it pass back all of the entries from the `tar.Extract` stream. The end of pipechain is also returned for future stream operations (if desired).
+Makes a request to `opts.url` and unpacks it to `opts.path`. Returns extracted entries via callback.
 
-- `opts.url`: {string} Location of the receiver.
-- `opts.headers`: {Object} HTTP headers to send.
-- `opts.method`: {string} HTTP Method to send.
-- `opts.path`: {string} Directory or file to unpack to.
-- `opts.tarball`: {string} **Optional** Path to save tarball to.
-- `returns`: {tar.Extract} Extraction stream for the pulled tarball.
+- `opts.url`: {string} Location of the tarball
+- `opts.headers`: {Object} HTTP headers to send
+- `opts.method`: {string} HTTP method (default: GET)
+- `opts.path`: {string} Directory to unpack to
+- `opts.tarball`: {string} Optional path to save tarball to
+- `opts.integrity`: {string} Optional SRI hash for verification
 
-``` js
-baltar.pull({
+```js
+import { pull } from 'baltar';
+
+// Promise-based (modern)
+const entries = await pull({
   url: 'https://example.com/path/to/any/file.tgz',
-  path: 'location/to/untar/into',
-}, function (err, entries) {
-  //
-  // Unpacked tarball now exists in
-  // 'location/to/untar/into'. All
-  // tar entries are returned to work with
-  //
-  var filenames = entries.map(function (entry) {
-    return e.path;
-  });
+  path: 'location/to/untar/into'
+});
 
+// Callback-based (legacy compatibility)
+pull({
+  url: 'https://example.com/path/to/any/file.tgz',
+  path: 'location/to/untar/into'
+}, (err, entries) => {
+  if (err) throw err;
+  const filenames = entries.map(e => e.path);
   console.log(filenames);
 });
 ```
 
 ##### `baltar.push(opts)`
 
-Pushes a tarball created from `opts.path` to `opts.url`
-optionally accepting a `opts.method` and returns a stream
-that represents the response.
+Pushes a tarball created from `opts.path` to `opts.url`. Returns a stream representing the response.
 
 - `opts.path`: Directory or file to pack
-- `opts.ignoreFiles`: Extra ignore files to parse
-- `opts.url`: {string} Location of the receiver.
-- `opts.headers`: {Object} HTTP headers to send.
-- `opts.method`: {string} HTTP Method to send.
-- `returns`: {hyperquest} HTTP request stream to `opts.url`.
+- `opts.ignoreFiles`: Extra ignore patterns
+- `opts.url`: {string} Upload destination
+- `opts.headers`: {Object} HTTP headers
+- `opts.method`: {string} HTTP method (default: POST)
+- `opts.signal`: {AbortSignal} Optional abort signal
 
-``` js
-baltar.push({
+```js
+import { push } from 'baltar';
+
+push({
   path: 'directory/or/file/to/pack',
   url: 'http://example.com/path/to/tarball/uploaded.tgz'
 })
-.on('error', function (err) {
-  // Handle any HTTP errors (e.g. Internet is down, etc.)
-  console.dir(err);
-})
-.on('finish', function () {
-  console.log('HTTP request finished.')
-});
+.on('error', err => console.error(err))
+.on('finish', () => console.log('Upload complete'));
 ```
-
-The stream returned is an instance of [`hyperquest`](https://github.com/substack/hyperquest), so you can perform any additional stream operations on it.
 
 ### Pack and unpack tarballs locally
 
 ##### `baltar.unpack(opts)`
 
-Returns a stream which will unpack and stream into the specified `opts.path`.
+Returns a stream which unpacks into the specified `opts.path`.
 
-- `opts`: {Object|string} Options for unpacking tarball.
-- `opts.path`: Directory or file to unpack to
-- `returns`: {Stream} Gunzip and untar pipechain to `opts.path`.
+- `opts`: {Object|string} Options or path string
+- `opts.path`: Directory to unpack to
 
-``` js
-fs.createReadStream('path/to/any/file.tgz')
-  .pipe(baltar.unpack({ path: 'location/to/untar/into' }))
-  .on('error', function (err) {
-    // Handle any HTTP errors (e.g. bad tarball, etc.)
-    console.dir(err);
-  })
-  .on('entry', function (e) { entries.push(e.path); })
-  .on('done', function () {
-    //
-    // Unpacked tarball now exists in
-    // 'location/to/untar/into'.
-    //
-  });
+```js
+import { createReadStream } from 'node:fs';
+import { unpack } from 'baltar';
+
+createReadStream('path/to/any/file.tgz')
+  .pipe(unpack({ path: 'location/to/untar/into' }))
+  .on('entry', e => console.log('Extracting:', e.path))
+  .on('done', () => console.log('Complete'));
 ```
 
 ##### `baltar.pack(opts)`
 
-Returns a stream representing the tar.gz packed version of `opts.dir`.
+Returns a stream representing the tar.gz packed version of `opts.path`.
 
-- `opts`: {Object|string} Options for packing tarball.
-- `opts.path`: Directory or file to pack.
-- `opts.ignoreFiles`: Extra ignore files to parse.
+- `opts`: {Object|string} Options or path string
+- `opts.path`: Directory or file to pack
+- `opts.ignoreFiles`: Extra ignore patterns
 
-``` js
-baltar.pack('just/a/path/also/works')
-  .pipe(hyperquest.post('http://example.com/tarball/uploaded.tgz'))
+```js
+import { createWriteStream } from 'node:fs';
+import { pack } from 'baltar';
+
+pack('directory/to/pack')
+  .pipe(createWriteStream('output.tgz'));
 ```
 
-##### LICENSE: MIT
-##### AUTHOR: [Charlie Robbins](http://github.com/indexzero)
+## License
+
+MIT
+
+## Author
+
+[Charlie Robbins](http://github.com/indexzero)

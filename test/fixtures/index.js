@@ -1,16 +1,18 @@
-'use strict';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-var path = require('path');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /*
  * @property {string} root Root directory
  */
-exports.root = __dirname;
+export const root = __dirname;
 
-exports.assume = function (tarball) {
+export function assume(tarball) {
   return {
     dir: 'assume-1.3.0',
-    tarball: path.join(__dirname, 'assume-1.3.0.tgz'),
+    tarball: join(__dirname, 'assume-1.3.0.tgz'),
     opts: {
       url: 'https://codeload.github.com/bigpipe/assume/tar.gz/1.3.0',
       tarball: tarball,
@@ -32,12 +34,12 @@ exports.assume = function (tarball) {
       'assume-1.3.0/test/test.js'
     ]
   };
-};
+}
 
 /*
  * Returns options to download broadway@2.0.0
  */
-exports.broadway = function (tarball) {
+export function broadway(tarball) {
   return {
     dir: 'broadway-2.0.0',
     opts: {
@@ -72,5 +74,5 @@ exports.broadway = function (tarball) {
       'broadway-2.0.0/test/mocha.opts',
       'broadway-2.0.0/test/unit.tests.js'
     ]
-  }
-};
+  };
+}

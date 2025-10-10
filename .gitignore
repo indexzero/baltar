@@ -13,6 +13,9 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 
+# Build output (generated CJS)
+dist/
+
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
@@ -25,6 +28,13 @@ build/Release
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
+
+# pnpm specific
+.pnpm-store
+.pnpm-debug.log
+
+# npm lockfile (we use pnpm)
+package-lock.json
 
 # Ignore test fixtures
 # but keep the directory
