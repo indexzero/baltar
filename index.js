@@ -1,4 +1,4 @@
-import { createWriteStream, createReadStream } from 'node:fs';
+import { createWriteStream, createReadStream, readFileSync, existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createGunzip, createGzip } from 'node:zlib';
 import { join } from 'node:path';
@@ -105,6 +105,29 @@ async function verifyIntegrity(filepath, expectedIntegrity) {
       `Actual:   ${actualHash}`
     );
   }
+}
+
+/**
+ * Load ignore rules from .npmignore or .gitignore synchronously
+ * @param {string} basePath - Base directory to load ignore files from
+ * @returns {Object} ignore object with filter method
+ */
+function loadIgnoreRulesSync(basePath) {
+  const ig = ignore();
+  const npmIgnorePath = join(basePath, '.npmignore');
+  const gitIgnorePath = join(basePath, '.gitignore');
+
+  // Try .npmignore first, fall back to .gitignore
+  if (existsSync(npmIgnorePath)) {
+    ig.add(readFileSync(npmIgnorePath, 'utf8'));
+  } else if (existsSync(gitIgnorePath)) {
+    ig.add(readFileSync(gitIgnorePath, 'utf8'));
+  }
+
+  // Always ignore these
+  ig.add(['.git', 'node_modules', '.DS_Store']);
+
+  return ig;
 }
 
 /**
@@ -255,45 +278,46 @@ export function pack(opts) {
 
   const gzip = createGzip();
 
-  // Load ignore rules asynchronously and create tar stream
-  (async () => {
-    try {
-      const ig = await loadIgnoreRules(opts.path);
+  try {
+    // Load ignore rules synchronously
+    const ig = loadIgnoreRulesSync(opts.path);
 
-      // Add custom ignore patterns if provided
-      if (opts.ignoreFiles && Array.isArray(opts.ignoreFiles)) {
-        ig.add(opts.ignoreFiles);
-      }
+    // Add custom ignore patterns if provided
+    if (opts.ignoreFiles && Array.isArray(opts.ignoreFiles)) {
+      ig.add(opts.ignoreFiles);
+    }
 
-      // Create tar stream with filter function
-      const tarStream = tar.create(
-        {
-          gzip: false, // We handle gzip separately
-          cwd: opts.path,
-          filter: (path, stat) => {
-            // Remove leading ./ if present
-            const relativePath = path.replace(/^\.\//, '');
-            // Don't filter the root directory itself
-            if (relativePath === '.' || relativePath === '') {
-              return true;
-            }
-            return !ig.ignores(relativePath);
+    // Create tar stream with filter function
+    const tarStream = tar.create(
+      {
+        gzip: false, // We handle gzip separately
+        cwd: opts.path,
+        filter: (path, stat) => {
+          // Remove leading ./ if present
+          const relativePath = path.replace(/^\.\//, '');
+          // Don't filter the root directory itself
+          if (relativePath === '.' || relativePath === '') {
+            return true;
           }
-        },
-        ['.'] // Pack everything from current directory
-      );
+          return !ig.ignores(relativePath);
+        }
+      },
+      ['.'] // Pack everything from current directory
+    );
 
-      tarStream.on('error', (err) => {
-        debug('tar creation error: %s', err);
-        gzip.emit('error', err);
-      });
+    tarStream.on('error', (err) => {
+      debug('tar creation error: %s', err);
+      gzip.emit('error', err);
+    });
 
-      tarStream.pipe(gzip);
-    } catch (err) {
+    tarStream.pipe(gzip);
+  } catch (err) {
+    // Emit error on next tick to allow stream to be returned first
+    process.nextTick(() => {
       debug('error reading %s: %s', opts.path, err);
       gzip.emit('error', err);
-    }
-  })();
+    });
+  }
 
   return gzip;
 }
