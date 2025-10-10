@@ -1,4 +1,4 @@
-import { createWriteStream, createReadStream, readFileSync, existsSync } from 'node:fs';
+import { createWriteStream, createReadStream, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createGunzip, createGzip } from 'node:zlib';
 import { join } from 'node:path';
@@ -12,29 +12,54 @@ import crypto from 'node:crypto';
 
 const debug = diagnostics('baltar');
 
+// Production-grade agent configuration
+const agentOptions = {
+  bodyTimeout: 600_000,
+  headersTimeout: 600_000,
+  keepAliveMaxTimeout: 1_200_000,
+  keepAliveTimeout: 600_000,
+  keepAliveTimeoutThreshold: 30_000,
+  connect: {
+    timeout: 600_000,
+    keepAlive: true,
+    keepAliveInitialDelay: 30_000,
+    sessionTimeout: 600,
+  },
+  connections: 128,
+  pipelining: 10
+};
+
 // Base agent for connection pooling
-const baseAgent = new Agent({
-  connections: 10,
-  keepAliveTimeout: 10000,
-  keepAliveTimeoutThreshold: 1000
-});
+const baseAgent = new Agent(agentOptions);
 
 // Shared undici agent with automatic retry
 const agent = new RetryAgent(baseAgent, {
   maxRetries: 3,
-  minTimeout: 500,
-  maxTimeout: 5000,
   timeoutFactor: 2,
+  minTimeout: 0,
+  maxTimeout: 30_000,
   retryAfter: true,
+  errorCodes: [
+    'ECONNREFUSED',
+    'ECONNRESET',
+    'EHOSTDOWN',
+    'ENETDOWN',
+    'ENETUNREACH',
+    'ENOTFOUND',
+    'EPIPE',
+    'UND_ERR_SOCKET',
+  ],
   // Retry on network errors and 5xx status codes
-  retry: (err, { state, opts }, cb) => {
-    if (err?.code === 'UND_ERR_SOCKET' || err?.code === 'UND_ERR_CONNECT_TIMEOUT') {
-      return cb(null, true); // Retry network errors
+  retry: (err, { state }, cb) => {
+    // Retry on specific error codes (already handled by errorCodes)
+    if (err?.code && agent.errorCodes?.includes(err.code)) {
+      return cb(null, true);
     }
+    // Retry on 5xx server errors
     if (state?.statusCode >= 500) {
-      return cb(null, true); // Retry server errors
+      return cb(null, true);
     }
-    return cb(null, false); // Don't retry other errors
+    return cb(null, false);
   }
 });
 
@@ -167,6 +192,7 @@ async function loadIgnoreRules(basePath) {
  *   - opts.path: {string} Directory to unpack to.
  *   - opts.tarball: {string} **Optional** Path to save tarball to.
  *   - opts.integrity: {string} **Optional** Integrity hash (e.g., "sha512-base64hash")
+ *   - opts.strip: {number} **Optional** Number of leading directory components to strip (default: 0)
  * @param {Object} callbackOpts - Optional callback options
  *   - callbackOpts.signal: {AbortSignal} **Optional** AbortSignal for cancellation
  * @returns {Promise<Array>} Array of extracted entries
@@ -183,6 +209,9 @@ export async function pull(opts, callbackOpts = {}) {
   debug('Download %s %s', method, opts.url);
   debug('Extract to %s', opts.path);
 
+  // Ensure the target directory exists
+  mkdirSync(opts.path, { recursive: true });
+
   // Fetch with automatic retry via RetryAgent
   const response = await request(opts.url, {
     method,
@@ -197,8 +226,11 @@ export async function pull(opts, callbackOpts = {}) {
     throw new Error(`HTTP ${response.statusCode}: ${response.statusMessage || 'Request failed'}`);
   }
 
-  // Set up extraction using tar.extract (modern tar API)
-  const extract = tar.extract({ cwd: opts.path });
+  // Set up extraction using tar.x() (shorthand for extract)
+  const extract = tar.x({
+    cwd: opts.path,
+    strip: opts.strip ?? 0  // Default to 0 if not specified
+  });
   const gunzip = createGunzip();
 
   extract.on('entry', (entry) => {
