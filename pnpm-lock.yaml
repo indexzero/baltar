@@ -19,7 +19,7 @@ importers:
         version: 7.5.1
       undici:
         specifier: ^7.16.0
-        version: 7.16.0
+        version: 7.18.2
     devDependencies:
       assume:
         specifier: ^2.3.0
@@ -501,8 +501,8 @@ packages:
     resolution: {integrity: sha512-Acylog8/luQ8L7il+geoSxhEkazvkslg7PSNKOX59mbB9cOveP5aq9h74Y7YU8yDpJwetzQQrfIwtf4Wp4LKcw==}
     engines: {node: '>=4'}
 
-  undici@7.16.0:
-    resolution: {integrity: sha512-QEg3HPMll0o3t2ourKwOeUAZ159Kn9mx5pnzHRQO8+Wixmh88YdZRiIwat0iNzNNXn0yoEtXJqFpyW7eM8BV7g==}
+  undici@7.18.2:
+    resolution: {integrity: sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==}
     engines: {node: '>=20.18.1'}
 
   v8-to-istanbul@9.3.0:
@@ -991,7 +991,7 @@ snapshots:
 
   type-detect@4.1.0: {}
 
-  undici@7.16.0: {}
+  undici@7.18.2: {}
 
   v8-to-istanbul@9.3.0:
     dependencies:
